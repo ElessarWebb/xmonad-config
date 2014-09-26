@@ -3,6 +3,7 @@
 import Data.Ratio
 import Data.Maybe
 import Data.Monoid
+import Data.Map as Map
 
 import XMonad
 import XMonad.Util.EZConfig
@@ -19,10 +20,10 @@ import XMonad.Layout.NoBorders
 import XMonad.Layout.MultiToggle
 import XMonad.Layout.MultiToggle.Instances
 import XMonad.Layout.Spacing
+import XMonad.Layout.Fullscreen
 import XMonad.Hooks.DynamicLog
 import System.IO
 
-import qualified Data.Map as Map
 import qualified XMonad.StackSet as W
 import qualified XMonad.Util.ExtensibleState as XS
 
@@ -35,49 +36,6 @@ layout = id
         $ smartSpacing 5 $ tiled ||| Mirror tiled ||| Full
           where tiled = Tall 1 (3/100) (1/2)
 
--- map from WorkspaceId to ScreenId with the initial position of the workspaces
-myWorkspacesInitialPosition = Map.fromList $ zip myWorkspaces [0, 0, 0, 0, 0, 1, 1, 1, 1, 1]
-
--- WorkspaceScreen stores a mapping from WorkspaceId to ScreenId.
--- For more info on how this is used see:
--- http://xmonad.org/xmonad-docs/xmonad-contrib/XMonad-Util-ExtensibleState.html
-data WorkspaceScreen = WorkspaceScreen (Map.Map WorkspaceId ScreenId) deriving Typeable
-instance ExtensionClass WorkspaceScreen where
-  initialValue = WorkspaceScreen myWorkspacesInitialPosition
-
--- Updates the screen assigned to a workspace
-doUpdateWorkspaceScreen :: WorkspaceId -> ScreenId -> X ()
-doUpdateWorkspaceScreen wid sc = do
-    (WorkspaceScreen m) <- XS.get
-    XS.put $ WorkspaceScreen $ Map.insert wid sc m
-
--- Updates the screen assigned to the currently focused workspace
-doUpdateCurrentWorkspaceScreen :: ScreenId -> X ()
-doUpdateCurrentWorkspaceScreen sc = do
-  wid <- withWindowSet $ return . W.currentTag
-  doUpdateWorkspaceScreen wid sc
-
--- Gets the screen assigned to a workspace
-getWorkspaceScreen :: WorkspaceId -> WorkspaceScreen -> ScreenId
-getWorkspaceScreen wid (WorkspaceScreen m) = fromJust $ Map.lookup wid m
-
--- Shows a workspace in the screen assigned to it
-doViewWorkspace :: WorkspaceId -> X ()
-doViewWorkspace wid = do
-  sc <- XS.gets $ getWorkspaceScreen wid
-  windows $ moveWorkspaceToScreen wid sc
-
--- Shows the current workspace in the screen assigned to it
-doViewCurrentWorkspace :: X ()
-doViewCurrentWorkspace = do
-  wid <- withWindowSet $ return . W.currentTag
-  doViewWorkspace wid
-
--- moves a workspace to a given screen and sets focus to that workspace
-moveWorkspaceToScreen :: WorkspaceId -> ScreenId -> WindowSet -> WindowSet
-moveWorkspaceToScreen wid sc ws =
-  W.view wid $ greedyViewOnScreen sc wid ws
-
 -- Forward the window information to the left dzen bar and format it
 myLogHook h = dynamicLogWithPP $ myDzenPP { ppOutput = hPutStrLn h }
 
@@ -86,14 +44,15 @@ myDzenStatus = "dzen2 -x '0' -w '1920' -ta 'l'" ++ " -h '20' -y '0' -fg '#777777
 -- Very plain formatting, non-empty workspaces are highlighted,
 -- urgent workspaces (e.g. active IM window) are highlighted in red
 myDzenPP  = dzenPP
-    { ppCurrent = dzenColor "#3399ff" "" . wrap " " " "
-    , ppHidden  = dzenColor "#dddddd" "" . wrap " " " "
-    , ppHiddenNoWindows = dzenColor "#777777" "" . wrap " " " "
-    , ppUrgent  = dzenColor "#ff0000" "" . wrap " " " "
-    , ppSep     = "  "
+    { ppCurrent = wrap (c "#ffffff" " [ ") (c "#ffffff" " ] ") . (c "#268bd2")
+    , ppHidden  = c "#dddddd" . wrap " " " "
+    , ppHiddenNoWindows = \y -> ""
+    , ppUrgent  = c "#ff0000" . wrap " " " "
+    , ppSep     = "   |   "
     , ppLayout  = \y -> ""
-    , ppTitle   = dzenColor "#ffffff" "" . wrap " " " "
+    , ppTitle   = wrap (c "#ffffff" " [ ") (c "#ffffff" " ] ") . (c "#859900")
     }
+    where c = flip dzenColor ""
 
 toggleStrutsKey XConfig{modMask = modm} = (modm, xK_b )
 
@@ -112,18 +71,13 @@ myconfig = defaultConfig {
     modMask = mod4Mask,
     borderWidth = 0,
     layoutHook = layout,
-    workspaces = myWorkspaces
+    workspaces = myWorkspaces,
+    handleEventHook =  fullscreenEventHook
   }
 
   `additionalKeys`
 
   ([
-    -- move workspace to screen 1, 2
-    ((mod4Mask .|. shiftMask, k), (doUpdateCurrentWorkspaceScreen i) >> doViewCurrentWorkspace)
-      | (k, i) <- zip [xK_w, xK_e] [0..]
-
-  ] ++ [
-
     -- client management
       ((mod4Mask .|. shiftMask, xK_h), windows W.swapMaster)
     , ((mod4Mask, xK_f), sendMessage $ Toggle FULL)
