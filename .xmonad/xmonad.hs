@@ -27,7 +27,7 @@ import qualified XMonad.StackSet as W
 import qualified XMonad.Util.ExtensibleState as XS
 
 -- workspaces: named from 0 to 9
-myWorkspaces = map show [0 .. 9]
+myWorkspaces = [ "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X" ]
 
 layout = id
         . smartBorders
@@ -81,10 +81,7 @@ moveWorkspaceToScreen wid sc ws =
 -- Forward the window information to the left dzen bar and format it
 myLogHook h = dynamicLogWithPP $ myDzenPP { ppOutput = hPutStrLn h }
 
-myDzenStatus = "dzen2 -x '0' -w '1920' -ta 'l'" ++ myDzenStyle
-
--- Bar style 24px high and colors
-myDzenStyle  = " -h '20' -y '0' -fg '#777777' -bg '#222222'"
+myDzenStatus = "dzen2 -x '0' -w '1920' -ta 'l'" ++ " -h '20' -y '0' -fg '#777777' -bg '#222222'"
 
 -- Very plain formatting, non-empty workspaces are highlighted,
 -- urgent workspaces (e.g. active IM window) are highlighted in red
@@ -100,29 +97,39 @@ myDzenPP  = dzenPP
 
 toggleStrutsKey XConfig{modMask = modm} = (modm, xK_b )
 
--- The main function.
 main = do
-  conky <- spawnPipe "conky -c ~/.conkyrc"
+
+  -- spawn conky
+  conky <- spawnPipe "conky -c ~/.xmonad/conkyrc"
+
+  -- spawn dzen
   leftbar <- statusBar myDzenStatus myDzenPP toggleStrutsKey myconfig
 
+  -- hopla
   xmonad leftbar
 
 myconfig = defaultConfig {
     modMask = mod4Mask,
     borderWidth = 0,
-    layoutHook = layout
+    layoutHook = layout,
+    workspaces = myWorkspaces
   }
 
   `additionalKeys`
 
   ([
-    -- mod4 + shift + {w,e} -> move workspace to screen 1, 2 and update assigned screen
-      ((mod4Mask .|. shiftMask, k), (doUpdateCurrentWorkspaceScreen i) >> doViewCurrentWorkspace)
-        | (k, i) <- zip [xK_w, xK_e] [0..]
+    -- move workspace to screen 1, 2
+    ((mod4Mask .|. shiftMask, k), (doUpdateCurrentWorkspaceScreen i) >> doViewCurrentWorkspace)
+      | (k, i) <- zip [xK_w, xK_e] [0..]
+
   ] ++ [
+
+    -- client management
       ((mod4Mask .|. shiftMask, xK_h), windows W.swapMaster)
-  ] ++ [
-    ((mod4Mask, xK_f), sendMessage $ Toggle FULL)
+    , ((mod4Mask, xK_f), sendMessage $ Toggle FULL)
+
+    -- utility
+    , ((mod4Mask .|. shiftMask, xK_r), spawn "xmonad --recompile")
   ])
 
   `removeKeys`
