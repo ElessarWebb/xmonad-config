@@ -82,7 +82,6 @@ moveWorkspaceToScreen wid sc ws =
 myLogHook h = dynamicLogWithPP $ myDzenPP { ppOutput = hPutStrLn h }
 
 myDzenStatus = "dzen2 -x '0' -w '1920' -ta 'l'" ++ myDzenStyle
--- myDzenConky  = "conky -c ~/.conkyrc | dzen2 -x '1000' -w '920' -ta 'r'" ++ myDzenStyle
 
 -- Bar style 24px high and colors
 myDzenStyle  = " -h '20' -y '0' -fg '#777777' -bg '#222222'"
@@ -103,8 +102,8 @@ toggleStrutsKey XConfig{modMask = modm} = (modm, xK_b )
 
 -- The main function.
 main = do
+  conky <- spawnPipe "conky -c ~/.conkyrc"
   leftbar <- statusBar myDzenStatus myDzenPP toggleStrutsKey myconfig
-  -- rightbar <- statusBar myDzenConky myDzenPP toggleStrutsKey leftbar
 
   xmonad leftbar
 
