@@ -22,6 +22,7 @@ import XMonad.Layout.MultiToggle.Instances
 import XMonad.Layout.Spacing
 import XMonad.Layout.Fullscreen
 import XMonad.Hooks.DynamicLog
+import XMonad.Hooks.SetWMName
 import System.IO
 
 import qualified XMonad.StackSet as W
@@ -31,8 +32,10 @@ import qualified XMonad.Util.ExtensibleState as XS
 myWorkspaces = [ "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X" ]
 
 layout = id
+        . smartBorders
+        . smartSpacing 5
         . mkToggle (NOBORDERS ?? FULL ?? EOT)
-        $ lessBorders OnlyFloat $ tiled ||| Mirror tiled ||| Full
+        $ tiled ||| Mirror tiled ||| Full
           where tiled = Tall 1 (3/100) (1/2)
 
 -- Forward the window information to the left dzen bar and format it
@@ -72,7 +75,8 @@ myconfig = defaultConfig {
     layoutHook = layout,
     workspaces = myWorkspaces,
     handleEventHook = fullscreenEventHook <+> docksEventHook,
-    manageHook = fullscreenManageHook <+> manageDocks
+    manageHook = fullscreenManageHook <+> manageDocks,
+    startupHook = setWMName "LG3D"
   }
 
   `additionalKeys`
