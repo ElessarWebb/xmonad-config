@@ -31,9 +31,8 @@ import qualified XMonad.Util.ExtensibleState as XS
 myWorkspaces = [ "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X" ]
 
 layout = id
-        . smartBorders
         . mkToggle (NOBORDERS ?? FULL ?? EOT)
-        $ smartSpacing 5 $ tiled ||| Mirror tiled ||| Full
+        $ lessBorders OnlyFloat $ tiled ||| Mirror tiled ||| Full
           where tiled = Tall 1 (3/100) (1/2)
 
 -- Forward the window information to the left dzen bar and format it
@@ -72,7 +71,8 @@ myconfig = defaultConfig {
     borderWidth = 0,
     layoutHook = layout,
     workspaces = myWorkspaces,
-    handleEventHook =  fullscreenEventHook
+    handleEventHook = fullscreenEventHook <+> docksEventHook,
+    manageHook = fullscreenManageHook <+> manageDocks
   }
 
   `additionalKeys`
@@ -80,7 +80,7 @@ myconfig = defaultConfig {
   ([
     -- client management
       ((mod4Mask .|. shiftMask, xK_h), windows W.swapMaster)
-    , ((mod4Mask, xK_f), sendMessage $ Toggle FULL)
+    , ((mod4Mask, xK_f), (sendMessage $ Toggle FULL) >>= (\x -> sendMessage $ ToggleStrut U))
 
     -- utility
     , ((mod4Mask .|. shiftMask, xK_r), spawn "xmonad --recompile")
