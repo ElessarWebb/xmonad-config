@@ -43,7 +43,7 @@ layout = id
 -- Forward the window information to the left dzen bar and format it
 myLogHook h = dynamicLogWithPP $ myDzenPP { ppOutput = hPutStrLn h }
 
-myDzenStatus = "dzen2 -x '0' -w '1920' -ta 'l'" ++ " -h '20' -y '0' -fg '#eeeeee' -bg '#002b36'"
+myDzenStatus = "dzen2 -x '0' -w '750' -ta 'l'" ++ " -h '20' -y '0' -fg '#eeeeee' -bg '#002b36'"
 
 -- Very plain formatting, non-empty workspaces are highlighted,
 -- urgent workspaces (e.g. active IM window) are highlighted in red

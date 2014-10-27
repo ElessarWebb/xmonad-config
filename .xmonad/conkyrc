@@ -15,7 +15,7 @@ gap_x 750
 gap_y -2
 own_window_colour 002b36
 alignment top_left
-minimum_size 1110 19
+minimum_size 1110 21
 
 color0 268bd2
 
