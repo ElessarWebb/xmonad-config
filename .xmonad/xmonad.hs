@@ -23,6 +23,8 @@ import XMonad.Layout.Spacing
 import XMonad.Layout.Fullscreen
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.SetWMName
+import XMonad.Actions.GridSelect
+import XMonad.Actions.WindowBringer
 import System.IO
 
 import qualified XMonad.StackSet as W
@@ -33,7 +35,7 @@ myWorkspaces = [ "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X" ]
 
 layout = id
         . smartBorders
-        . smartSpacing 5
+        . smartSpacing 1
         . mkToggle (NOBORDERS ?? FULL ?? EOT)
         $ tiled ||| Mirror tiled ||| Full
           where tiled = Tall 1 (3/100) (1/2)
@@ -88,6 +90,9 @@ myconfig = defaultConfig {
 
     -- utility
     , ((mod4Mask .|. shiftMask, xK_r), spawn "xmonad --recompile")
+    , ((mod4Mask, xK_g), goToSelected defaultGSConfig)
+    , ((mod4Mask .|. shiftMask, xK_g), gotoMenu)
+    , ((mod4Mask .|. shiftMask, xK_b), bringMenu)
   ])
 
   `removeKeys`
