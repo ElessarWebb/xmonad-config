@@ -11,11 +11,11 @@ border_inner_margin 0
 border_outer_margin 0
 use_spacer left
 if_up_strictness address
-gap_x 750
+gap_x 747
 gap_y -2
 own_window_colour 002b36
 alignment top_left
-minimum_size 1110 21
+minimum_size 1170 21
 
 color0 268bd2
 

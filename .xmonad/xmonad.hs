@@ -21,6 +21,7 @@ import XMonad.Layout.MultiToggle
 import XMonad.Layout.MultiToggle.Instances
 import XMonad.Layout.Spacing
 import XMonad.Layout.Fullscreen
+import XMonad.Layout.Tabbed
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.SetWMName
 import XMonad.Actions.GridSelect
@@ -33,11 +34,23 @@ import qualified XMonad.Util.ExtensibleState as XS
 -- workspaces: named from 0 to 9
 myWorkspaces = [ "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X" ]
 
+
+
+-- Colors for text and backgrounds of each tab when in "Tabbed" layout.
+tabconfig = defaultTheme {
+  activeBorderColor = "#002b36",
+  activeTextColor = "#ffffff",
+  activeColor = "#268bd2",
+  inactiveBorderColor = "#002b36",
+  inactiveTextColor = "#eeeeee",
+  inactiveColor = "#002b36"
+}
+
 layout = id
         . smartBorders
-        . smartSpacing 1
+        . smartSpacing 0
         . mkToggle (NOBORDERS ?? FULL ?? EOT)
-        $ tiled ||| Mirror tiled ||| Full
+        $ tiled ||| tabbed shrinkText tabconfig |||  Full
           where tiled = Tall 1 (3/100) (1/2)
 
 -- Forward the window information to the left dzen bar and format it
@@ -77,7 +90,7 @@ myconfig = defaultConfig {
     layoutHook = layout,
     workspaces = myWorkspaces,
     handleEventHook = fullscreenEventHook <+> docksEventHook,
-    manageHook = fullscreenManageHook <+> manageDocks,
+    manageHook = fullscreenManageHook <+> (isFullscreen --> doFullFloat) <+> manageDocks,
     startupHook = setWMName "LG3D"
   }
 
@@ -87,6 +100,7 @@ myconfig = defaultConfig {
     -- client management
       ((mod4Mask .|. shiftMask, xK_h), windows W.swapMaster)
     , ((mod4Mask, xK_f), (sendMessage $ Toggle FULL) >>= (\x -> sendMessage $ ToggleStrut U))
+    , ((mod4Mask, xK_b), (sendMessage $ ToggleStrut U))
 
     -- utility
     , ((mod4Mask .|. shiftMask, xK_r), spawn "xmonad --recompile")
